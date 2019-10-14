@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <input id='fileInput' type='file'>
+    <input type='submit' onclick='resumableUpload()'>
+
+    <script>
+
+        async function resumableUpload(e) {
+            let fileInput = document.getElementById('fileInput')
+            let file = fileInput.files[0]
+            let fileId = file.name + '-' + file.lastModified
+            
+            statusHeaders = {
+                "size": file.size.toString(),
+                "x-file-id": fileId,
+                "name": file.name
+            }
+
+            fetch('http://localhost:3000/status', {
+                headers: statusHeaders,
+                method: 'GET'
+            }).then(res => res.json())
+                .then(res => {
+
+                if (res.fileState === 'present') {
+                    return alert(res.fileState)
+                }
+
+                let uploadedBytes = res.uploaded
+                let uploadHeaders = {
+                    "size": file.size.toString(),
+                    "x-file-id": fileId,
+                    "x-start-byte": uploadedBytes.toString(),
+                    "name": file.name
+                }
+
+                fetch('http://localhost:3000/upload', {
+                    headers: uploadHeaders,
+                    method: 'POST',
+                    body: file.slice(uploadedBytes, file.size + 1)
+                }).then(uploadRes => uploadRes.json())
+                  .then(uploadRes => {
+                        console.log(JSON.stringify(uploadRes))
+                })
+
+            })
+        }
+    </script>
+</body>
+</html>
