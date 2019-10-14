@@ -71,7 +71,7 @@ app.post('/upload', (req, res, next) => {
 
     if (!fileId) {
         console.log('no such file')
-        res.send('No such file')
+        res.send({'status': 'No such file'})
         return
     }
 
@@ -91,7 +91,8 @@ app.post('/upload', (req, res, next) => {
     } else {
         console.log('resuming upload')
         if (upload.bytesRecieved != startByte) {
-            return res.end('Wrong start byte')
+            res.send({'status': 'Wrong start byte'})
+            return
         }
         fileStream = fs.createWriteStreamI(`./name/${name}`, { flags: 'a' })
     }
@@ -112,13 +113,15 @@ app.post('/upload', (req, res, next) => {
             return;
         } else {
             console.log('File unfinished, stopped at ' + upload.bytesReceived)
-            return res.end('server error')
+            res.send({'status': 'server error'})
+            return;
         }
     })
 
     fileStream.on('error', err => {
         console.log('filestream error', err)
-        return res.end('filestream error')
+        res.send({'status': 'filestream error'})
+        return;
     })
 })
 
